@@ -1,47 +1,44 @@
 /**
- * Draws every frame to `sheet.png`, on a light and a dark ground: `bun scripts/sheet.ts [palette] [out]`. The way to
- * look at the pixels while changing them (`src/pet/sprites.ts`), and the picture in the README.
+ * Writes the placeholder kitty (`src/pet/sprites.ts`) as the sheet the pet draws from, in `SHEET`'s layout:
+ * `bun scripts/sheet.ts [palette]` → `public/kitty.png`. Goes, with `sprites.ts`, once a drawn sheet replaces it.
  */
 import {deflateSync} from 'node:zlib'
-import {hang, PALETTES, sit, SIZE, sleep, walk} from '../src/pet/sprites'
-
-const FRAMES = {
-    sit: sit(), sitTail: sit('open', 'smile', 1), lookLeft: sit('open', 'smile', 0, -1), lookRight: sit('open', 'smile', 0, 1),
-    blink: sit('closed'), happy: sit('happy', 'open'), alert: sit('wide', 'flat'), chomp: sit('open', 'open'),
-    sleep0: sleep(0), sleep1: sleep(1), walk0: walk(0), walk1: walk(1), walk2: walk(2), walk3: walk(3),
-    hang0: hang(0), hang1: hang(1),
-}
+import {CELL, SHEET} from '../src/pet/draw'
+import {type Frame, hang, MARKS, PALETTES, sit, sleep, walk} from '../src/pet/sprites'
 
 const palette = PALETTES[(process.argv[2] ?? 'ginger') as keyof typeof PALETTES]
 if (!palette) throw new Error(`no palette "${process.argv[2]}": ${Object.keys(PALETTES).join(', ')}`)
-const SCALE = 5
-const PAD = 4
-const COLUMNS = 6
-const names = Object.keys(FRAMES) as (keyof typeof FRAMES)[]
-const cell = (SIZE + PAD * 2) * SCALE
-const rows = Math.ceil(names.length / COLUMNS)
-const width = cell * COLUMNS
-const height = cell * rows * 2
+
+/** A mark in the middle of a cell. */
+const centred = (part: readonly string[]): Frame => {
+    const top = Math.floor((CELL - part.length) / 2)
+    const left = Math.floor((CELL - part[0]!.length) / 2)
+    return Array.from({length: CELL}, (_, y) => {
+        const row = part[y - top]
+        return row ? '.'.repeat(left) + row + '.'.repeat(CELL - left - row.length) : '.'.repeat(CELL)
+    })
+}
+
+const rows: Record<keyof typeof SHEET, Frame[]> = {
+    sit: [sit(), sit('open', 'smile', 1), sit('closed'), sit('open', 'smile', 0, -1), sit('open', 'smile', 0, 1)],
+    happy: [sit('happy', 'open'), sit('happy', 'open', 1), sit('open', 'open'), sit('happy', 'smile')],
+    alert: [sit('wide', 'flat'), sit('wide', 'flat', 1)],
+    sleep: [sleep(0), sleep(1)],
+    walk: [walk(0), walk(1), walk(2), walk(3)],
+    hang: [hang(0), hang(1)],
+    marks: SHEET.marks.cells.map(kind => centred(MARKS[kind])),
+}
+
+const width = CELL * Math.max(...Object.values(SHEET).map(r => r.cells.length))
+const height = CELL * Object.keys(SHEET).length
 const rgba = new Uint8Array(width * height * 4)
 const rgb = (hex: string) => [1, 3, 5].map(i => Number.parseInt(hex.slice(i, i + 2), 16))
-
-for (let y = 0; y < height; y++) {
-    const ground = y < height / 2 ? [244, 244, 240] : [30, 31, 38]
-    for (let x = 0; x < width; x++) rgba.set([...ground, 255], (y * width + x) * 4)
-}
-for (const [half, offset] of [[0, 0], [1, height / 2]] as const) {
-    void half
-    names.forEach((name, i) => {
-        const left = (i % COLUMNS) * cell + PAD * SCALE
-        const top = offset + Math.floor(i / COLUMNS) * cell + PAD * SCALE
-        FRAMES[name].forEach((row, py) => [...row].forEach((key, px) => {
-            if (key === '.') return
-            const colour = rgb(palette[key as keyof typeof palette])
-            for (let sy = 0; sy < SCALE; sy++) {
-                for (let sx = 0; sx < SCALE; sx++) rgba.set([...colour, 255], ((top + py * SCALE + sy) * width + left + px * SCALE + sx) * 4)
-            }
-        }))
-    })
+for (const [name, frames] of Object.entries(rows)) {
+    if (frames.length !== SHEET[name as keyof typeof SHEET].cells.length) throw new Error(`${name}: ${frames.length} frames for its row's cells`)
+    frames.forEach((frame, col) => frame.forEach((line, y) => [...line].forEach((key, x) => {
+        if (key === '.') return
+        rgba.set([...rgb(palette[key as keyof typeof palette]), 255], ((SHEET[name as keyof typeof SHEET].row * CELL + y) * width + col * CELL + x) * 4)
+    })))
 }
 
 function chunk(type: string, data: Uint8Array): Buffer {
@@ -58,6 +55,5 @@ header.writeUInt32BE(height, 4)
 header.set([8, 6, 0, 0, 0], 8)
 const lines = Buffer.alloc((width * 4 + 1) * height)
 for (let y = 0; y < height; y++) lines.set(rgba.subarray(y * width * 4, (y + 1) * width * 4), y * (width * 4 + 1) + 1)
-const out = process.argv[3] ?? 'sheet.png'
-await Bun.write(out, Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', header), chunk('IDAT', deflateSync(lines)), chunk('IEND', new Uint8Array())]))
-console.log(`${out}: ${names.length} frames, ${width}×${height}`)
+await Bun.write('public/kitty.png', Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', header), chunk('IDAT', deflateSync(lines)), chunk('IEND', new Uint8Array())]))
+console.log(`public/kitty.png: ${width}×${height}`)

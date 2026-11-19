@@ -7,7 +7,7 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["vite/client", "@type32/vertex-plugin"]
+    "types": ["vite/client", "bun", "@type32/vertex-plugin"]
   },
-  "include": ["src"]
+  "include": ["src", "demo", "scripts"]
 }

@@ -1,8 +1,14 @@
 {
   "plugins": {
-    "my-plugin": {
-      "view": "My plugin",
-      "hello": "Hello from {name}"
+    "furball": {
+      "config": {
+        "shown": "Show the kitty",
+        "shownHelp": "Along the bottom of each workspace window.",
+        "size": "Size",
+        "small": "Small",
+        "medium": "Medium",
+        "large": "Large"
+      }
     }
   }
 }

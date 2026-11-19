@@ -1,8 +1,14 @@
 {
   "plugins": {
-    "my-plugin": {
-      "view": "我的插件",
-      "hello": "来自 {name} 的问候"
+    "furball": {
+      "config": {
+        "shown": "显示小猫",
+        "shownHelp": "在每个工作区窗口的底部。",
+        "size": "大小",
+        "small": "小",
+        "medium": "中",
+        "large": "大"
+      }
     }
   }
 }

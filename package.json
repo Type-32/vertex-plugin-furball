@@ -1,5 +1,5 @@
 {
-  "name": "my-plugin",
+  "name": "vertex-plugin-furball",
   "private": true,
   "type": "module",
   "scripts": {

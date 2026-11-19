@@ -1,17 +1,21 @@
 import {definePlugin} from '@type32/vertex-plugin'
 import {h} from 'vue'
-import View from './View.vue'
+import Kitty from './Kitty.vue'
 import './style.css'
 
-export default definePlugin({
+export interface Config {
+    /** The kitty in this window. */
+    shown: boolean
+    /** Screen pixels per sheet pixel. */
+    size: '2' | '3' | '4'
+}
+
+export default definePlugin<Config>({
     setup(ctx) {
-        ctx.views.panel({
-            id: 'my-plugin',
-            // An i18n key: this plugin's strings are `plugins.my-plugin.…`, from `locales/`.
-            label: 'plugins.my-plugin.view',
-            icon: 'i-lucide-puzzle',
-            defaultArea: 'right',
-            component: async () => ({render: () => h(View, {ctx})}),
+        ctx.views.overlay({
+            id: 'furball',
+            when: () => ctx.config.value.shown,
+            component: async () => ({render: () => h(Kitty, {ctx})}),
         })
     },
 })

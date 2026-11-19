@@ -50,6 +50,8 @@ export function createStage(canvas: HTMLCanvasElement, {sheet, scale}: StageOpti
     const at = (e: PointerEvent) => ({x: e.clientX - rect.left, y: e.clientY - rect.top})
     const hits = ({x, y}: { x: number, y: number }) => Math.abs(x - pet.x) < pet.size * HALF_WIDTH && y < pet.y && y > pet.y - pet.size * HEIGHT
     let press: { x: number, y: number, at: number, dragging: boolean } | undefined
+    /** The last press was on the kitty: the mouse events that follow it are its. */
+    let ours = false
     const cursor = (value: string) => {
         if (document.documentElement.style.cursor !== value) document.documentElement.style.cursor = value
     }
@@ -60,8 +62,10 @@ export function createStage(canvas: HTMLCanvasElement, {sheet, scale}: StageOpti
 
     function down(e: PointerEvent) {
         const p = at(e)
-        if (e.button !== 0 || !hits(p)) return
+        ours = hits(p)
+        if (!ours) return
         take(e)
+        if (e.button !== 0) return
         press = {...p, at: e.timeStamp, dragging: false}
     }
     function move(e: PointerEvent) {
@@ -91,12 +95,14 @@ export function createStage(canvas: HTMLCanvasElement, {sheet, scale}: StageOpti
         cursor(hits(at(e)) ? 'grab' : '')
     }
     const leave = () => (world.pointer = undefined)
-    // Capturing, so a press on the kitty never reaches what's under it; the click that follows a press is its too.
-    const click = (e: MouseEvent) => hits({x: e.clientX - rect.left, y: e.clientY - rect.top}) && take(e)
+    // Capturing, so a press on the kitty never reaches what's under it, nor do the mouse events that come of it
+    // (an editor listens to `mousedown`, not `pointerdown`). The next press decides again.
+    const MOUSE = ['mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu'] as const
+    const mouse = (e: MouseEvent) => (ours || hits({x: e.clientX - rect.left, y: e.clientY - rect.top})) && take(e)
     window.addEventListener('pointerdown', down, true)
     window.addEventListener('pointermove', move, true)
     window.addEventListener('pointerup', up, true)
-    window.addEventListener('click', click, true)
+    for (const type of MOUSE) window.addEventListener(type, mouse, true)
     document.documentElement.addEventListener('pointerleave', leave)
 
     return {
@@ -111,7 +117,7 @@ export function createStage(canvas: HTMLCanvasElement, {sheet, scale}: StageOpti
             window.removeEventListener('pointerdown', down, true)
             window.removeEventListener('pointermove', move, true)
             window.removeEventListener('pointerup', up, true)
-            window.removeEventListener('click', click, true)
+            for (const type of MOUSE) window.removeEventListener(type, mouse, true)
             document.documentElement.removeEventListener('pointerleave', leave)
             cursor('')
         },

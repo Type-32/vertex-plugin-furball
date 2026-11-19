@@ -1,9 +1,37 @@
 {
-  "id": "my-plugin",
-  "name": "My plugin",
+  "id": "furball",
+  "name": "Furball",
   "version": "0.1.0",
-  "description": "What it does, in a sentence.",
-  "author": "You",
-  "repository": "https://github.com/you/my-plugin",
-  "apiVersion": 1
+  "description": "A pixel kitty along the bottom of your window: pet it, pick it up by the scruff, throw it.",
+  "icon": "i-lucide-cat",
+  "author": "CTRL Neo Studios",
+  "repository": "https://github.com/Type-32/vertex-plugin-furball",
+  "apiVersion": 1,
+  "minAppVersion": "1.0.0-beta.1",
+  "config": {
+    "overridable": {
+      "shown": "workspace",
+      "size": "workspace"
+    },
+    "schema": [
+      {
+        "key": "shown",
+        "type": "switch",
+        "label": "plugins.furball.config.shown",
+        "description": "plugins.furball.config.shownHelp",
+        "default": true
+      },
+      {
+        "key": "size",
+        "type": "select",
+        "label": "plugins.furball.config.size",
+        "default": "3",
+        "options": [
+          {"value": "2", "label": "plugins.furball.config.small"},
+          {"value": "3", "label": "plugins.furball.config.medium"},
+          {"value": "4", "label": "plugins.furball.config.large"}
+        ]
+      }
+    ]
+  }
 }

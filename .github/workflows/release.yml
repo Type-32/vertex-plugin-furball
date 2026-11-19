@@ -17,6 +17,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
+      - run: bun run test
       - run: bun run build
       - run: gh release create "$GITHUB_REF_NAME" plugin.zip --title "$GITHUB_REF_NAME" --generate-notes
         env:

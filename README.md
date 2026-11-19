@@ -41,8 +41,26 @@ In Vertex: Settings → Plugins → Install… ▾ → **From a folder (developm
 
 - `src/pet/`: the kitty, with no Vertex in it: `cat.ts` (what it does), `draw.ts` (the sheet's layout, `SHEET`),
   `stage.ts` (a canvas and the pointer).
-- `public/kitty.png`: the art, 32×32 cells in `SHEET`'s layout. The one here is a placeholder made by
-  `bun run sheet` from `src/pet/sprites.ts`; a sheet drawn in that layout replaces it.
+- `public/kitty.png`: the art. The one here is a placeholder made by `bun run sheet` from `src/pet/sprites.ts`; a
+  sheet drawn in the layout below replaces it (and then `sprites.ts` and `scripts/sheet.ts` can go).
+
+### The sheet
+
+A PNG with a transparent background, 32×32 pixel cells, 5 cells wide and 7 rows tall (160×224). It's drawn scaled up
+by whole numbers with no smoothing. In every cell the kitty's feet are on the bottom row, in the middle; walking
+faces right (Vertex mirrors it to walk left). Each row, left to right (`SHEET` in `src/pet/draw.ts`):
+
+| Row | Cells |
+| --- | --- |
+| 0 sitting | sit, sit with the tail up, blink, eyes left, eyes right |
+| 1 happy | happy, happy with the tail up, chomping (mouth open), chomping (mouth shut) |
+| 2 alert | alert, alert with the tail up |
+| 3 asleep | breathing in, breathing out |
+| 4 walking | four steps of a walk |
+| 5 held | held by the scruff, two swings (also how it falls) |
+| 6 marks | heart, Z, `!`, crumb: small, in the middle of their cells |
+
+A cell that's empty in a row with fewer cells is never drawn.
 
 ### For other plugins
 

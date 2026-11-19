@@ -1,0 +1,8 @@
+{
+  "plugins": {
+    "my-plugin": {
+      "view": "My plugin",
+      "hello": "Hello from {name}"
+    }
+  }
+}

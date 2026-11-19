@@ -1,0 +1,8 @@
+{
+  "plugins": {
+    "my-plugin": {
+      "view": "我的插件",
+      "hello": "来自 {name} 的问候"
+    }
+  }
+}

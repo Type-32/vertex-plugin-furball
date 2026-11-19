@@ -1,0 +1,9 @@
+{
+  "id": "my-plugin",
+  "name": "My plugin",
+  "version": "0.1.0",
+  "description": "What it does, in a sentence.",
+  "author": "You",
+  "repository": "https://github.com/you/my-plugin",
+  "apiVersion": 1
+}

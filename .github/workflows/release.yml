@@ -1,0 +1,23 @@
+# Pushing a tag (`v0.2.0`) builds the plugin and makes a release with its `plugin.zip`, which Vertex installs and
+# checks for updates. The tag should be `plugin.json`'s version, with or without the `v`.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run build
+      - run: gh release create "$GITHUB_REF_NAME" plugin.zip --title "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

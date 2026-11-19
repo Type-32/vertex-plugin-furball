@@ -1,0 +1,2 @@
+/* Tailwind against Vertex's theme. A plugin's classes carry the prefix `tw:` (`tw:flex`, `tw:text-muted`). */
+@import "@type32/vertex-plugin/tailwind.css";

@@ -5,7 +5,7 @@
  */
 import type {PluginContext} from '@type32/vertex-plugin'
 import {onBeforeUnmount, onMounted, useTemplateRef, watch} from 'vue'
-import type {Config} from './main'
+import type {Config} from './context'
 import {CELL} from './pet/draw'
 import {createStage, type Stage} from './pet/stage'
 

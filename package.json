@@ -10,7 +10,7 @@
     "sheet": "bun scripts/sheet.ts"
   },
   "devDependencies": {
-    "@type32/vertex-plugin": "^1.6.1",
+    "@type32/vertex-plugin": "file:../vertex/packages/vertex-plugin",
     "@types/bun": "^1.4.4",
     "@vitejs/plugin-vue": "^6.0.11",
     "typescript": "6.0.3",

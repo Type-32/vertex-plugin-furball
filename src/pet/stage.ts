@@ -1,29 +1,42 @@
 /**
- * The kitty on a canvas: the frame loop and the pointer. The canvas is the world (it's sized by its host, CSS);
- * it takes no pointer events itself, so whatever is under it keeps them, except where the kitty is: a press there
- * is the kitty's. A click boops it, a drag holds it by the scruff and throws it, a pointer moving over it strokes it.
+ * The kitty on a canvas: the frame loop and the pointer. A click boops it, a drag holds it by the scruff and throws
+ * it, a pointer moving over it strokes it.
+ *
+ * In a page, the canvas is the world (it's sized by its host, CSS): it takes no pointer events itself, so whatever is
+ * under it keeps them, except where the kitty is. On the desktop (`desk`), the world is the screen and the canvas is a
+ * small window that follows the kitty around it.
  */
 import {boop, cheer, createPet, drop, eat, grab, HALF_WIDTH, HEIGHT, hold, sleep, startle, step, stroke, type World} from './cat'
 import {CELL, draw} from './draw'
+
+/** The screen's part the kitty lives in on the desktop, and the window it's drawn in, both in screen pixels. */
+export interface Desk {
+    area: { x: number, y: number, width: number, height: number }
+    /** Puts the window's top left corner here. */
+    move(x: number, y: number): Promise<void>
+}
 
 export interface StageOptions {
     /** The sheet, loaded. */
     sheet: CanvasImageSource
     /** Screen pixels per sheet pixel. */
     scale: number
+    desk?: Desk
 }
 
 /** A press that moves this far is a drag. */
 const DRAG = 4
 
-export function createStage(canvas: HTMLCanvasElement, {sheet, scale}: StageOptions) {
+export function createStage(canvas: HTMLCanvasElement, {sheet, scale, desk}: StageOptions) {
     const g = canvas.getContext('2d')!
-    const world: World = {width: 0, height: 0}
+    const world: World = {width: desk?.area.width ?? 0, height: desk?.area.height ?? 0}
     let rect = canvas.getBoundingClientRect()
     const resize = () => {
         rect = canvas.getBoundingClientRect()
-        world.width = rect.width
-        world.height = rect.height
+        if (!desk) {
+            world.width = rect.width
+            world.height = rect.height
+        }
         canvas.width = Math.round(rect.width * devicePixelRatio)
         canvas.height = Math.round(rect.height * devicePixelRatio)
     }
@@ -33,6 +46,21 @@ export function createStage(canvas: HTMLCanvasElement, {sheet, scale}: StageOpti
     canvas.style.pointerEvents = 'none'
     const pet = createPet(world, CELL * scale)
 
+    // On the desktop: the world's point at the canvas's top left (the window's place, once it's been moved there), and
+    // the place last asked for. One move at a time: they're calls to the app, and a frame doesn't wait for one.
+    let view = {x: 0, y: 0}
+    let asked: typeof view | undefined
+    let moving = false
+    function follow(desk: Desk) {
+        const next = {x: Math.round(pet.x - rect.width / 2), y: Math.round(pet.y - rect.height)}
+        if (moving || (asked && asked.x === next.x && asked.y === next.y)) return
+        asked = next
+        moving = true
+        desk.move(desk.area.x + next.x, desk.area.y + next.y)
+            .then(() => (view = next), () => (asked = undefined))
+            .finally(() => (moving = false))
+    }
+
     let time = 0
     let last = performance.now()
     let frame = requestAnimationFrame(function tick(now) {
@@ -40,14 +68,18 @@ export function createStage(canvas: HTMLCanvasElement, {sheet, scale}: StageOpti
         last = now
         time += dt
         step(pet, dt, world)
-        g.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
-        g.clearRect(0, 0, world.width, world.height)
+        if (desk) follow(desk)
+        g.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, -view.x * devicePixelRatio, -view.y * devicePixelRatio)
+        g.clearRect(view.x, view.y, rect.width, rect.height)
         g.imageSmoothingEnabled = false
         draw(g, sheet, pet, time)
         frame = requestAnimationFrame(tick)
     })
 
-    const at = (e: PointerEvent) => ({x: e.clientX - rect.left, y: e.clientY - rect.top})
+    // Where the pointer is in the world: on the desktop, from the screen, as the window moves under it.
+    const at = (e: MouseEvent) => desk
+        ? {x: e.screenX - desk.area.x, y: e.screenY - desk.area.y}
+        : {x: e.clientX - rect.left, y: e.clientY - rect.top}
     const hits = ({x, y}: { x: number, y: number }) => Math.abs(x - pet.x) < pet.size * HALF_WIDTH && y < pet.y && y > pet.y - pet.size * HEIGHT
     let press: { x: number, y: number, at: number, dragging: boolean } | undefined
     /** The last press was on the kitty: the mouse events that follow it are its. */
@@ -98,7 +130,7 @@ export function createStage(canvas: HTMLCanvasElement, {sheet, scale}: StageOpti
     // Capturing, so a press on the kitty never reaches what's under it, nor do the mouse events that come of it
     // (an editor listens to `mousedown`, not `pointerdown`). The next press decides again.
     const MOUSE = ['mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu'] as const
-    const mouse = (e: MouseEvent) => (ours || hits({x: e.clientX - rect.left, y: e.clientY - rect.top})) && take(e)
+    const mouse = (e: MouseEvent) => (ours || hits(at(e))) && take(e)
     window.addEventListener('pointerdown', down, true)
     window.addEventListener('pointermove', move, true)
     window.addEventListener('pointerup', up, true)

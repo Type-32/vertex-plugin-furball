@@ -8,6 +8,7 @@
   "repository": "https://github.com/Type-32/vertex-plugin-furball",
   "apiVersion": 1,
   "minAppVersion": "1.0.0-beta.1",
+  "ownWindows": [{"id": "desk", "width": 192, "height": 192, "resizable": false, "bare": true}],
   "config": {
     "overridable": {
       "shown": "workspace",
@@ -31,6 +32,13 @@
           {"value": "3", "label": "plugins.furball.config.medium"},
           {"value": "4", "label": "plugins.furball.config.large"}
         ]
+      },
+      {
+        "key": "onTop",
+        "type": "switch",
+        "label": "plugins.furball.config.onTop",
+        "description": "plugins.furball.config.onTopHelp",
+        "default": true
       }
     ]
   }

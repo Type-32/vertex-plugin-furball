@@ -9,10 +9,16 @@ A pixel kitty that lives along the bottom of your [Vertex](https://github.com/CT
 
 Everything under it keeps working: only the kitty itself takes clicks.
 
+## Out on the desktop
+
+**Let the kitty out on the desktop** (command palette) and it leaves the window for the bottom edge of your screen,
+where it walks, sleeps and can be thrown about like in the window, above your other apps. **Call the kitty back** to
+bring it home; it also goes when its workspace window closes. Next time it comes out where it last sat.
+
 ## Settings
 
-Settings → Plugins → Furball: **Show the kitty** and its **Size** (small, medium, large). A workspace can change both
-for its own windows.
+Settings → Plugins → Furball: **Show the kitty** and its **Size** (small, medium, large), which a workspace can change
+for its own windows, and **Keep it above other windows** while it's out on the desktop.
 
 ## Develop
 

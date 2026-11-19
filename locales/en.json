@@ -7,7 +7,13 @@
         "size": "Size",
         "small": "Small",
         "medium": "Medium",
-        "large": "Large"
+        "large": "Large",
+        "onTop": "Keep it above other windows",
+        "onTopHelp": "While it's out on the desktop."
+      },
+      "commands": {
+        "letOut": "Let the kitty out on the desktop",
+        "callBack": "Call the kitty back"
       }
     }
   }

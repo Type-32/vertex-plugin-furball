@@ -7,7 +7,13 @@
         "size": "大小",
         "small": "小",
         "medium": "中",
-        "large": "大"
+        "large": "大",
+        "onTop": "保持在其他窗口之上",
+        "onTopHelp": "当它在桌面上时。"
+      },
+      "commands": {
+        "letOut": "把小猫放到桌面上",
+        "callBack": "叫小猫回来"
       }
     }
   }

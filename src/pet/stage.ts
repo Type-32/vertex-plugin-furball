@@ -22,12 +22,14 @@ export interface StageOptions {
     /** Screen pixels per sheet pixel. */
     scale: number
     desk?: Desk
+    /** A click on it (a boop), for its host to answer too. */
+    onPoke?: () => void
 }
 
 /** A press that moves this far is a drag. */
 const DRAG = 4
 
-export function createStage(canvas: HTMLCanvasElement, {sheet, scale, desk}: StageOptions) {
+export function createStage(canvas: HTMLCanvasElement, {sheet, scale, desk, onPoke}: StageOptions) {
     const g = canvas.getContext('2d')!
     const world: World = {width: desk?.area.width ?? 0, height: desk?.area.height ?? 0}
     let rect = canvas.getBoundingClientRect()
@@ -122,7 +124,10 @@ export function createStage(canvas: HTMLCanvasElement, {sheet, scale, desk}: Sta
         if (!press) return
         take(e)
         if (press.dragging) drop(pet)
-        else boop(pet)
+        else {
+            boop(pet)
+            onPoke?.()
+        }
         press = undefined
         cursor(hits(at(e)) ? 'grab' : '')
     }
@@ -139,8 +144,10 @@ export function createStage(canvas: HTMLCanvasElement, {sheet, scale, desk}: Sta
 
     return {
         pet,
-        cheer: () => cheer(pet),
-        eat: () => eat(pet),
+        /** Its feet, in the canvas's pixels: where its host puts what it holds up. */
+        local: () => ({x: pet.x - view.x, y: pet.y - view.y}),
+        cheer: (big?: boolean) => cheer(pet, big),
+        eat: (last?: boolean) => eat(pet, last),
         startle: () => startle(pet),
         sleep: () => sleep(pet),
         destroy() {

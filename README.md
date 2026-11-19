@@ -15,6 +15,13 @@ Everything under it keeps working: only the kitty itself takes clicks.
 where it walks, sleeps and can be thrown about like in the window, above your other apps. **Call the kitty back** to
 bring it home; it also goes when its workspace window closes. Next time it comes out where it last sat.
 
+## Things to do
+
+With a plugin that gives it things to do (the [Tasks](https://github.com/CTRL-Neo-Studios/vertex-plugin-tasks)
+plugin: what's overdue and due today), the kitty holds up the next one and stays awake while there are any. **Click**
+it to open the list; tick one there and the kitty eats it (the task is done in its file), and the last one gets a big
+cheer. A late one makes it restless; a reminder that's due makes it jump and hold that one up.
+
 ## Settings
 
 Settings → Plugins → Furball: **Show the kitty** and its **Size** (small, medium, large), which a workspace can change
@@ -36,6 +43,20 @@ In Vertex: Settings → Plugins → Install… ▾ → **From a folder (developm
   `stage.ts` (a canvas and the pointer).
 - `public/kitty.png`: the art, 32×32 cells in `SHEET`'s layout. The one here is a placeholder made by
   `bun run sheet` from `src/pet/sprites.ts`; a sheet drawn in that layout replaces it.
+
+### For other plugins
+
+Furball provides an API in each workspace window where it's on. Copy `src/api.ts` into your plugin (it only declares
+types, and types `ctx.use('furball')`), list `"furball?"` in your `requires`, then:
+
+```ts
+ctx.whenPlugin('furball', furball => {
+    const remove = furball.source({id: 'my-plugin', label: 'My plugin', items: () => things.value, done: id => finish(id)})
+    furball.nudge('Stand up and stretch')
+})
+```
+
+`items` is read in a Vue `computed`, so a reactive list is followed; `cheer()` makes the kitty hop.
 
 ## Release
 

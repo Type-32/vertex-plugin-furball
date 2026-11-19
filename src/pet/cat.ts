@@ -49,6 +49,12 @@ export interface Pet {
     stroked: number
     marks: Mark[]
     random: () => number
+    /** It has things to do, so it doesn't fall asleep on its own. Its host sets it. */
+    busy: boolean
+    /** One of them is late: it fidgets, and wakes. Its host sets it. */
+    restless: boolean
+    /** What it's eating is the last: the cheer after it is the big one. */
+    feast: boolean
 }
 
 /** Left alone this long, it falls asleep. */
@@ -82,7 +88,7 @@ export function createPet(world: World, size: number, seed = Date.now()): Pet {
     return {
         size, x: world.width / 2, y: world.height, vx: 0, vy: 0, grounded: true, facing: 1,
         state: 'sit', t: 0, until: 2, targetX: world.width / 2, idle: 0,
-        squash: 0, squashV: 0, look: 0, stroked: 0, marks: [], random,
+        squash: 0, squashV: 0, look: 0, stroked: 0, marks: [], random, busy: false, restless: false, feast: false,
     }
 }
 
@@ -164,7 +170,8 @@ function behave(pet: Pet, dt: number, world: World) {
             const dx = world.pointer ? world.pointer.x - pet.x : 0
             pet.look = Math.abs(dx) < pet.size * 0.6 ? 0 : dx < 0 ? -1 : 1
             if (pet.t < pet.until) return
-            if (pet.idle >= SLEEP_AFTER) return sleep(pet)
+            if (pet.restless && pet.random() < 0.5) return startle(pet)
+            if (pet.idle >= SLEEP_AFTER && !pet.busy) return sleep(pet)
             if (pet.random() < 0.5 && world.width > pet.size * 3) {
                 pet.targetX = half + pet.random() * (world.width - half * 2)
                 if (Math.abs(pet.targetX - pet.x) > pet.size) return to(pet, 'walk')
@@ -184,13 +191,14 @@ function behave(pet: Pet, dt: number, world: World) {
             return
         }
         case 'sleep':
+            if (pet.restless && pet.t > 4) return startle(pet)
             if (pet.t >= pet.until) {
                 mark(pet, 'z', pet.size * 0.4, -pet.size * 0.5, 1.6)
                 pet.until = pet.t + 2
             }
             return
         case 'eat':
-            if (pet.t >= pet.until) return cheer(pet)
+            if (pet.t >= pet.until) return cheer(pet, pet.feast)
             if (Math.floor(pet.t / 0.15) !== Math.floor((pet.t - dt) / 0.15)) {
                 mark(pet, 'crumb', (pet.random() - 0.5) * pet.size * 3, -pet.size * 2, 0.6)
             }
@@ -253,17 +261,21 @@ export function stroke(pet: Pet, distance: number) {
     if (pet.state === 'sit' || pet.state === 'walk') to(pet, 'happy', 0.6)
 }
 
-export function cheer(pet: Pet) {
+/** Hops with hearts; `big`, higher and with more (the last thing done). */
+export function cheer(pet: Pet, big = false) {
     if (pet.state === 'held') return
     pet.idle = 0
-    to(pet, 'happy', 1.2)
-    hop(pet, HOP)
-    for (let i = 0; i < 3; i++) mark(pet, 'heart', (i - 1) * pet.size * 0.6, -pet.size * (1 + i * 0.2))
+    to(pet, 'happy', big ? 2 : 1.2)
+    hop(pet, big ? HOP * 1.4 : HOP)
+    const hearts = big ? 7 : 3
+    for (let i = 0; i < hearts; i++) mark(pet, 'heart', (i - (hearts - 1) / 2) * pet.size * 0.5, -pet.size * (1 + (i % 3) * 0.2), big ? 1.8 : 1.2)
 }
 
-export function eat(pet: Pet) {
+/** Eats something done; `last`, the last thing there was. */
+export function eat(pet: Pet, last = false) {
     if (pet.state === 'held') return
     pet.idle = 0
+    pet.feast = last
     to(pet, 'eat', 0.9)
 }
 

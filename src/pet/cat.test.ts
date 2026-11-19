@@ -32,3 +32,13 @@ it('left alone it falls asleep, and a boop wakes it', () => {
     expect(pet.state).toBe('startle')
     expect(run(pet, 3, p => p.state === 'sit')).toBe(true)
 })
+
+it('with things to do it stays awake; with a late one it fidgets, and wakes from sleep', () => {
+    const pet = createPet(world, 96, 3)
+    pet.busy = true
+    expect(run(pet, SLEEP_AFTER + 30, p => p.state === 'sleep')).toBe(false)
+    pet.busy = false
+    expect(run(pet, 30, p => p.state === 'sleep')).toBe(true)
+    pet.restless = true
+    expect(run(pet, 6, p => p.state === 'startle')).toBe(true)
+})
